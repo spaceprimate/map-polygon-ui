@@ -22,7 +22,7 @@
     <script src="https://openlayers.org/en/v4.6.4/build/ol-debug.js"></script>
 </head>
 
-<body id="top">
+<body id="top" style="margin-bottom:80px;">
     <nav class="navbar navbar-inverse navbar-user">
         <div class="container-fluid">
             <div class="navbar-left user-info">Map Polygon Input Generation</div>
@@ -37,34 +37,22 @@
                 <div class="col-sm-6 col-sm-offset-3" id="registrationForm">
                     <div class="form-wrapper" style="padding-top:12px;">
                         <form>
-                            
 
-                          
-
-                            <p>Please select coordinates from the map or enter them manually below</p>
-
+                            <p>Please draw a polygon on the map or enter coordinates manually below</p>
 
                             <div id="map" class="map" style="margin-bottom:12px;"></div>
-
-                            <!-- <p>
-                                <label>Geometry type &nbsp;</label>
-                                <select id="type">
-                                    <option value="Polygon">Polygon</option>
-                                    <option value="None">None</option>
-                                </select>
-                            </p> -->
-
+                            <div>
+                                <p><button class="btn btn-info submit btn-small" id="display-manual-coordinates">Enter Coordinates Manually</button></p>
+                            </div>
                             <div id="map-points" style="display:none;">
                                 <p>
                                     <a href="#" id="clear-map-points" class="pull-right">clear</a>
                                     Points
                                 </p>
-                                <div id="map-points-values"></div>
+                                <div id="map-point-values"></div>
                             </div>
 
-                            <p>
-                                <button class="btn btn-primary btn-lg submit" id="submit-rq" value="SubmitRequest">Submit</button>
-                            </p>
+                           
 
                         </form>
                     </div>
@@ -119,13 +107,51 @@
             // }
         }
 
-        /**
-         * Handle change event.
-         */
-        // typeSelect.onchange = function () {
-        //     map.removeInteraction(draw);
-        //     addInteraction();
-        // };
+
+
+/*
+
+var ring = [[-12073459.720221292,4424140.860199702],
+[-11022948.616312541,5297122.785766149],
+[-11267507.693982394, 3845205.61363921],
+[-12073459.720221292, 4424140.860199702]];
+
+var polygon = new ol.geom.Polygon([ring]);
+
+// Create feature with polygon.
+var feature = new ol.Feature(polygon);
+
+
+vector.getSource().addFeature(feature)
+
+
+
+
+
+
+
+
+
+
+// Create vector source and the feature to it.
+var vectorSource = new ol.source.Vector();
+vectorSource.addFeature(feature);
+
+// Create vector layer attached to the vector source.
+var vectorLayer = new ol.layer.Vector({
+  source: vectorSource
+});
+
+// Add the vector layer to the map.
+map.addLayer(vectorLayer);
+
+
+
+*/
+        
+        // add programatically
+        // https://stackoverflow.com/questions/27210362/open-layers-3-how-to-draw-a-polygon-programmically
+        // you might need to transform projection of polygon
 
         addInteraction();
 
@@ -136,7 +162,7 @@
             var feature = e.feature;
             var geometry = feature.getGeometry();
             var coordinates = geometry.getCoordinates()[0];
-            $("#map-points-values").html(""); //remove previous values
+            $("#map-point-values").html(""); //remove previous values
             $("#map-points").show();
             coordinates.forEach(function (coords, index) {
                 addPointField(index, coords[0], coords[1]);
@@ -159,23 +185,84 @@
                 '<div class="form-inline form-group" style="border-bottom: 1px solid #e7e7e7; padding-bottom: 8px; margin-bottom: 8px;">' +
                 '<b>' + pointNumber + '</b> - ' +
                 '<label for="rq-coord-1-lat" class="col-form-label control-label">Lat: </label>' +
-                '<input value=" ' + lat + '"  type="text" id="rq-coord-' + id + '-lat" name="coord-' + id +
+                '<input value="' + lat + '"  type="number" id="rq-coord-' + id + '-lat" name="coord-' + id +
                 '-lat" maxlength="64" required style="width: 160px; min-width: 140px; font-size: 14px; margin-left: 3px; margin-right: 8px;" placeholder="latitude"> ' +
                 '<label for="rq-coord-1-lon" class="col-form-label control-label">Lon: </label>' +
-                '<input value=" ' + lon + '"  type="text" id="rq-coord-' + id + '-lon" name="coord-' + id +
+                '<input value="' + lon + '"  type="number" id="rq-coord-' + id + '-lon" name="coord-' + id +
                 '-lon" maxlength="64" required style="width: 160px; min-width: 140px; font-size: 14px; margin-left: 3px; margin-right: 8px;" placeholder="latitude">' +
                 '</div>';
-            $("#map-points-values").append(input);
+            $("#map-point-values").append(input);
         }
+
+        function displayManualCoordinates(){
+            source.clear();
+            $("#map-point-values").html(""); //remove previous values
+            for(i=0; i<3; i++){
+                addPointField(i, 0, 0);
+            }
+            $("#map-points").show();
+        }
+
+        function updatePolygon(){
+            var points = getPolygonInputs();
+            source.clear();
+
+            var polygon = new ol.geom.Polygon([points]);
+
+            // Create feature with polygon.
+            var feature = new ol.Feature(polygon);
+
+
+            vector.getSource().addFeature(feature)
+            
+
+
+        }
+
+        function getPolygonInputs(){
+            var newPoly = [];
+            //var coordPair = [0,0];
+            $("#map-point-values input").each(function(i){
+
+                if(!isOdd(i)){
+                    newPoly.push([$(this).val(),0]);
+                }
+                else{
+                    newPoly[newPoly.length - 1][1] = $(this).val();
+                }
+
+
+            });
+            console.log(newPoly);
+            return newPoly;
+        }
+
+        function isOdd(num) { return num % 2;}
+
+
+
+
+        /* -- Controls --------------------------------------- */
 
         // handle "clear" button
         $(document).ready(function () {
             $("#clear-map-points").on("click", function (event) {
                 event.preventDefault();
-                $("#map-points-values").html("");
+                $("#map-point-values").html("");
                 $("#map-points").hide();
                 source.clear();
             });
+
+            $("#display-manual-coordinates").on("click", function (event) {
+                event.preventDefault();
+                displayManualCoordinates();
+            });
+
+            $("#map-point-values").on("change", "input", function(event){
+                updatePolygon();
+                console.log("input value changed");
+            });
+
         });
     </script>
 </body>

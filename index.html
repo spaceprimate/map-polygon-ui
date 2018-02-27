@@ -8,10 +8,12 @@
     <title>Map Polygon UI</title>
 
     <!-- Latest compiled and minified CSS -->
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+        crossorigin="anonymous">
 
-<!-- Optional theme -->
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
+        crossorigin="anonymous">
     <link rel="stylesheet" href="https://openlayers.org/en/v4.6.4/css/ol.css" type="text/css">
 
     <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
@@ -23,140 +25,70 @@
 </head>
 
 <body id="top" style="margin-bottom:80px;">
-    <nav class="navbar navbar-inverse navbar-user">
-        <div class="container-fluid">
-            <div class="navbar-left user-info">Map Polygon Input Generation</div>
+
+    <div class="container" style="padding-bottom: 90px; max-width:500px;">
+        <h3>Map Polygon Input Generation</h3>
+        <p>Please draw a polygon on the map or enter coordinates manually below</p>
+        <div id="map" class="map" style="margin-bottom:12px; background: linear-gradient(to right, #fb00ff , #4396fd);"></div>
+        <div>
+            <p>
+                <a id="display-manual-coordinates" style="cursor:pointer;">Enter Coordinates Manually</a>
+            </p>
         </div>
-    </nav>
-
-    
-        <div class="container">
-
-            
-            <div class="row">
-                <div class="col-sm-6 col-sm-offset-3" id="registrationForm">
-                    <div class="form-wrapper" style="padding-top:12px;">
-                        <form>
-
-                            <p>Please draw a polygon on the map or enter coordinates manually below</p>
-
-                            <div id="map" class="map" style="margin-bottom:12px;"></div>
-                            <div>
-                                <p><button class="btn btn-info submit btn-small" id="display-manual-coordinates">Enter Coordinates Manually</button></p>
-                            </div>
-                            <div id="map-points" style="display:none;">
-                                <p>
-                                    <a href="#" id="clear-map-points" class="pull-right">clear</a>
-                                    Points
-                                </p>
-                                <div id="map-point-values"></div>
-                            </div>
-
-                           
-
-                        </form>
-                    </div>
-                </div>
-            </div>
+        <div id="map-points" style="display:none;">
+            <p>
+                <a href="#" id="clear-map-points" class="pull-right">clear</a>
+                Points
+            </p>
+            <div id="map-point-values"></div>
+            <a id="add-point-field" style="cursor:pointer;">
+                <span class="glyphicon glyphicon-plus"></span> Add point</a>
+            <a id="remove-point-field" style="cursor:pointer; margin-left:32px;">
+                <span class="glyphicon glyphicon-minus"></span> Remove point</a>
         </div>
-    
+
+    </div>
+
 
 
     <script>
-        //NRL's bluemarble basemap layer from WMS service
-        var wmsTiles = new ol.layer.Tile({
-            source: new ol.source.TileWMS({
-                url: 'https://geoint.nrlssc.navy.mil/nrltileserver/wms',
-                params: {
-                    'LAYERS': 'bluemarble',
-                    'TILED': true
-                },
-                serverType: 'geoserver'
-            })
+        var countries = new ol.source.Vector({
+            url: 'https://openlayers.org/en/v4.6.4/examples/data/geojson/countries.geojson',
+            format: new ol.format.GeoJSON()
         });
 
         var source = new ol.source.Vector({
             wrapX: false
         });
-
         var vector = new ol.layer.Vector({
             source: source
         });
-
         var map = new ol.Map({
-            layers: [wmsTiles, vector],
+            layers: [new ol.layer.Vector({
+                source: countries
+            }), vector],
             target: 'map',
             view: new ol.View({
-                center: [-11000000, 4600000],
-                zoom: 4
+                center: [80, 25],
+                zoom: 3,
+                projection: 'EPSG:4326'
             })
         });
 
-        var typeSelect = document.getElementById('type');
-
         var draw; // global so we can remove it later
+
         function addInteraction() {
-            // var value = typeSelect.value;
-            // if (value !== 'None') {
-                draw = new ol.interaction.Draw({
-                    source: source,
-                    // type: typeSelect.value,
-                    type: 'Polygon'
-                });
-                map.addInteraction(draw);
-            // }
+            draw = new ol.interaction.Draw({
+                source: source,
+                type: 'Polygon'
+            });
+            map.addInteraction(draw);
         }
-
-
-
-/*
-
-var ring = [[-12073459.720221292,4424140.860199702],
-[-11022948.616312541,5297122.785766149],
-[-11267507.693982394, 3845205.61363921],
-[-12073459.720221292, 4424140.860199702]];
-
-var polygon = new ol.geom.Polygon([ring]);
-
-// Create feature with polygon.
-var feature = new ol.Feature(polygon);
-
-
-vector.getSource().addFeature(feature)
-
-
-
-
-
-
-
-
-
-
-// Create vector source and the feature to it.
-var vectorSource = new ol.source.Vector();
-vectorSource.addFeature(feature);
-
-// Create vector layer attached to the vector source.
-var vectorLayer = new ol.layer.Vector({
-  source: vectorSource
-});
-
-// Add the vector layer to the map.
-map.addLayer(vectorLayer);
-
-
-
-*/
-        
-        // add programatically
-        // https://stackoverflow.com/questions/27210362/open-layers-3-how-to-draw-a-polygon-programmically
-        // you might need to transform projection of polygon
 
         addInteraction();
 
         /**
-         * Populate coordinate inputs fields on drawend
+         * Populate coordinate inputs fields on 'drawend'
          */
         draw.on('drawend', function (e) {
             var feature = e.feature;
@@ -164,18 +96,19 @@ map.addLayer(vectorLayer);
             var coordinates = geometry.getCoordinates()[0];
             $("#map-point-values").html(""); //remove previous values
             $("#map-points").show();
+            $("#display-manual-coordinates").hide();
             coordinates.forEach(function (coords, index) {
-                addPointField(index, coords[0], coords[1]);
+                addPointField(index, coords[1], coords[0]);
             });
         });
-        
+
         /**
          * Remove existing polygons on drawstart
          */
         draw.on('drawstart', function () {
             source.clear();
         });
-        
+
         /**
          * Appends a html block with coordinate information for each point
          */
@@ -194,75 +127,83 @@ map.addLayer(vectorLayer);
             $("#map-point-values").append(input);
         }
 
-        function displayManualCoordinates(){
+        /**
+         * Clear map and create 3 point (lat/lon) input rows
+         */
+        function displayManualCoordinates() {
             source.clear();
             $("#map-point-values").html(""); //remove previous values
-            for(i=0; i<3; i++){
+            for (i = 0; i < 3; i++) {
                 addPointField(i, 0, 0);
             }
             $("#map-points").show();
+            $("#display-manual-coordinates").hide();
         }
 
-        function updatePolygon(){
+        /**
+         * Redraw polygon on map based on point inputs
+         */
+        function updatePolygon() {
             var points = getPolygonInputs();
             source.clear();
-
             var polygon = new ol.geom.Polygon([points]);
-
             // Create feature with polygon.
             var feature = new ol.Feature(polygon);
-
-
             vector.getSource().addFeature(feature)
-            
-
-
         }
 
-        function getPolygonInputs(){
+        /**
+         * build an ol geometry array from point input fields
+         * @return geometry
+         */
+        function getPolygonInputs() {
             var newPoly = [];
-            //var coordPair = [0,0];
-            $("#map-point-values input").each(function(i){
-
-                if(!isOdd(i)){
-                    newPoly.push([$(this).val(),0]);
+            $("#map-point-values input").each(function (i) {
+                if (!isOdd(i)) {
+                    newPoly.push([0, $(this).val()]);
+                } else {
+                    newPoly[newPoly.length - 1][0] = $(this).val();
                 }
-                else{
-                    newPoly[newPoly.length - 1][1] = $(this).val();
-                }
-
-
             });
-            console.log(newPoly);
             return newPoly;
         }
 
-        function isOdd(num) { return num % 2;}
+        /**
+         * Deletes last point input row from html and updates the polygon
+         */
+        function removeLastPointRow() {
+            $("#map-point-values .form-group:last").remove();
+            updatePolygon();
+        }
 
+        // tests for odd numbers
+        function isOdd(num) {
+            return num % 2;
+        }
 
-
-
-        /* -- Controls --------------------------------------- */
-
-        // handle "clear" button
+        /* -- jquery Controls ----------------------------------------------------------------------------- */
         $(document).ready(function () {
             $("#clear-map-points").on("click", function (event) {
                 event.preventDefault();
                 $("#map-point-values").html("");
                 $("#map-points").hide();
                 source.clear();
+                $("#display-manual-coordinates").show();
             });
-
             $("#display-manual-coordinates").on("click", function (event) {
                 event.preventDefault();
                 displayManualCoordinates();
             });
-
-            $("#map-point-values").on("change", "input", function(event){
+            $("#map-point-values").on("change", "input", function (event) {
                 updatePolygon();
-                console.log("input value changed");
             });
-
+            $("#add-point-field").on("click", function () {
+                var i = $("#map-point-values input").length / 2;
+                addPointField(i, 0, 0);
+            });
+            $("#remove-point-field").on("click", function () {
+                removeLastPointRow();
+            });
         });
     </script>
 </body>
